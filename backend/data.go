@@ -2,8 +2,9 @@
 package main
 
 import (
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+    "database/sql"
+    "math"
+    _ "github.com/mattn/go-sqlite3"
 )
 
 type Match struct {
@@ -87,8 +88,8 @@ func RecordMatch(db *sql.DB, m Match) {
 	a := GetOrCreateTeam(db, m.TeamA)
 	b := GetOrCreateTeam(db, m.TeamB)
 
-	eA := 1.0 / (1.0 + pow10((b.Rating-a.Rating)/400))
-	eB := 1.0 / (1.0 + pow10((a.Rating-b.Rating)/400))
+	eA := 1.0 / (1.0 + math.Pow(10, (b.Rating-a.Rating)/400))
+	eB := 1.0 / (1.0 + math.Pow(10, (a.Rating-b.Rating)/400))
 	
 	K := 32.0
 	var sA, sB float64
@@ -107,17 +108,7 @@ func RecordMatch(db *sql.DB, m Match) {
 	}
 }
 
-func pow10(x float64) float64 {
-	return float64(1.0 / (1.0 + pow(10, x)))
-}
 
-func pow(base, exp float64) float64 {
-	result := 1.0
-	for i := 0; i < int(exp); i++ {
-		result *= base
-	}
-	return result
-}
 
 func GetTeamStats(db *sql.DB, name string) TeamStats {
 	stats := GetOrCreateTeam(db, name)
@@ -127,7 +118,7 @@ func GetTeamStats(db *sql.DB, name string) TeamStats {
 func PredictOutcome(db *sql.DB, teamA, teamB string) (float64, float64) {
 	a := GetOrCreateTeam(db, teamA)
 	b := GetOrCreateTeam(db, teamB)
-	eA := 1.0 / (1.0 + pow(10, (b.Rating-a.Rating)/400))
-	eB := 1.0 - eA
+	eA := 1.0 / (1.0 + math.Pow(10, (b.Rating-a.Rating)/400))
+	eB := 1.0 / (1.0 + math.Pow(10, (a.Rating-b.Rating)/400))
 	return eA, eB
 }
