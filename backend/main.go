@@ -10,7 +10,7 @@ import (
 )
 
 var db = InitDB()
-
+// accepts a JSON body with two teams and scores, decodes it, and calls RecordMatch
 func addMatch(w http.ResponseWriter, r *http.Request) {
 	var m Match
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
@@ -21,13 +21,13 @@ func addMatch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintln(w, "Match added")
 }
-
+//  returns the stats for any team by name
 func getTeamStatsHandler(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/team/")
 	stats := GetTeamStats(db, name)
 	json.NewEncoder(w).Encode(stats)
 }
-
+// returns the win probability for any matchup
 func predictHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/predict/"), "/")
 	if len(parts) != 2 {
