@@ -1,4 +1,4 @@
-// data.go
+
 package main
 
 import (
@@ -19,7 +19,8 @@ type TeamStats struct {
 	Draws  int
 	Rating float64
 }
-
+// creates the SQLite database on first run with two tables:
+// one for storing every match played, one for storing each team's running stats and rating
 func InitDB() *sql.DB {
 	db, err := sql.Open("sqlite3", "sports.db")
 	if err != nil {
@@ -47,7 +48,7 @@ func InitDB() *sql.DB {
 	}
 	return db
 }
-
+// safety function (checks if that team exists; if not, creates it with a default rating of 1500)
 func GetOrCreateTeam(db *sql.DB, name string) TeamStats {
 	var stats TeamStats
 	err := db.QueryRow("SELECT wins, losses, draws, rating FROM teams WHERE name = ?", name).Scan(&stats.Wins, &stats.Losses, &stats.Draws, &stats.Rating)
@@ -72,6 +73,10 @@ func UpdateTeamStats(db *sql.DB, name string, win, loss, draw int, newRating flo
 		panic(err)
 	}
 }
+
+// saves the raw result to the matches table
+// calculates the expected win probability for each team using their current Elo ratings
+// then updates both teams' ratings based on whether the actual result matched expectations
 
 func RecordMatch(db *sql.DB, m Match) {
 	_, err := db.Exec("INSERT INTO matches (team_a, score_a, team_b, score_b) VALUES (?, ?, ?, ?)", m.TeamA, m.ScoreA, m.TeamB, m.ScoreB)
@@ -118,7 +123,7 @@ func GetTeamStats(db *sql.DB, name string) TeamStats {
 	stats := GetOrCreateTeam(db, name)
 	return stats
 }
-
+// takes two team names and returns win probabilities based on their current ratings
 func PredictOutcome(db *sql.DB, teamA, teamB string) (float64, float64) {
 	a := GetOrCreateTeam(db, teamA)
 	b := GetOrCreateTeam(db, teamB)
